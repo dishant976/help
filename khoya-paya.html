@@ -1,0 +1,507 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Khoya–Paya · Anonymous reunification board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+Devanagari:wght@500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#EDEEE9;
+  --slip:#F6F7F3;
+  --ink:#1A1D19;
+  --muted:#6B7268;
+  --rule:#C9CCC2;
+  --seek:#0B4F6C;
+  --found:#2E6B4F;
+  --safe:#5A4B12;
+  --urgent:#B4341F;
+  --shadow:0 1px 0 rgba(26,29,25,.09), 0 6px 18px -12px rgba(26,29,25,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"Noto Sans","Noto Sans Devanagari",system-ui,sans-serif;
+  font-size:16px; line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:920px;margin:0 auto;padding:0 16px 96px}
+.hi{font-family:"Noto Sans Devanagari","Noto Sans",sans-serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+/* ---------- notice strip ---------- */
+.strip{
+  background:var(--ink); color:var(--paper);
+  font-size:12.5px; letter-spacing:.02em; padding:9px 16px;
+}
+.strip b{color:#F0C86A;font-weight:600}
+.strip .in{max-width:920px;margin:0 auto}
+
+/* ---------- masthead ---------- */
+header{padding:26px 0 18px;border-bottom:2px solid var(--ink)}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--muted);
+}
+h1{
+  font-family:"Noto Sans Devanagari","Archivo",sans-serif; font-weight:700;
+  font-size:clamp(34px,9vw,58px); line-height:.95; margin:8px 0 2px; letter-spacing:-.02em;
+}
+h1 span{font-family:"Archivo",sans-serif;display:block;font-size:.42em;letter-spacing:.03em;margin-top:8px;color:var(--muted);font-weight:600}
+.lede{max-width:52ch;margin:14px 0 0;color:#3A403A;font-size:15px}
+
+/* ---------- actions ---------- */
+.acts{display:grid;gap:10px;grid-template-columns:1fr;margin:20px 0 0}
+@media(min-width:640px){.acts{grid-template-columns:repeat(3,1fr)}}
+.act{
+  appearance:none;border:1.5px solid var(--ink);background:var(--slip);color:var(--ink);
+  text-align:left;padding:14px 15px;border-radius:2px;cursor:pointer;box-shadow:var(--shadow);
+  font:inherit;transition:transform .12s ease,background .12s ease;
+}
+.act:hover{background:#fff;transform:translateY(-1px)}
+.act:focus-visible{outline:3px solid var(--seek);outline-offset:2px}
+.act .t{font-weight:700;font-size:16px;display:block}
+.act .s{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.act[data-k="seek"]{border-left:6px solid var(--seek)}
+.act[data-k="found"]{border-left:6px solid var(--found)}
+.act[data-k="safe"]{border-left:6px solid var(--safe)}
+
+/* ---------- filters ---------- */
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:30px 0 14px;
+  padding-bottom:12px;border-bottom:1px solid var(--rule)}
+.chip{
+  font:600 12.5px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;
+  padding:8px 11px;border:1px solid var(--rule);background:transparent;border-radius:99px;cursor:pointer;color:var(--muted)
+}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip:focus-visible{outline:3px solid var(--seek);outline-offset:2px}
+select.zone{
+  font:400 13px "Noto Sans",sans-serif;padding:7px 9px;border:1px solid var(--rule);
+  background:var(--slip);border-radius:2px;color:var(--ink);margin-left:auto
+}
+.count{font:400 12px "IBM Plex Mono",monospace;color:var(--muted);width:100%}
+
+/* ---------- slips ---------- */
+.board{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:700px){.board{grid-template-columns:1fr 1fr}}
+.slip{
+  position:relative;background:var(--slip);border:1px solid var(--rule);border-radius:2px;
+  padding:16px 16px 14px;box-shadow:var(--shadow);
+}
+/* signature: perforated counterfoil edge */
+.slip::before{
+  content:"";position:absolute;left:0;right:0;top:-1px;height:6px;
+  background:radial-gradient(circle at 5px -1px,transparent 4px,var(--rule) 4px 4.6px,transparent 4.7px) repeat-x;
+  background-size:10px 6px;
+}
+.slip[data-k="seek"]{border-top:4px solid var(--seek)}
+.slip[data-k="found"]{border-top:4px solid var(--found)}
+.slip[data-k="safe"]{border-top:4px solid var(--safe)}
+.slip .kind{
+  font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;
+}
+.slip[data-k="seek"] .kind{color:var(--seek)}
+.slip[data-k="found"] .kind{color:var(--found)}
+.slip[data-k="safe"] .kind{color:var(--safe)}
+.slip .ref{position:absolute;top:14px;right:16px;font:600 12px "IBM Plex Mono",monospace;color:var(--muted)}
+.slip h3{font-family:"Archivo",sans-serif;font-size:19px;margin:9px 0 0;letter-spacing:-.01em;word-break:break-word}
+.slip .desc{margin:8px 0 0;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.tag{font:600 11px/1 "IBM Plex Mono",monospace;letter-spacing:.05em;padding:5px 7px;border:1px solid var(--rule);border-radius:2px;color:var(--muted);text-transform:uppercase}
+.tag.hot{border-color:var(--urgent);color:var(--urgent)}
+.slipfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:13px;padding-top:11px;border-top:1px dashed var(--rule)}
+.when{font:400 11.5px "IBM Plex Mono",monospace;color:var(--muted)}
+.reply{
+  font:600 13px "Noto Sans",sans-serif;background:var(--ink);color:var(--paper);
+  border:0;padding:9px 13px;border-radius:2px;cursor:pointer
+}
+.reply:focus-visible{outline:3px solid var(--seek);outline-offset:2px}
+
+.empty{border:1.5px dashed var(--rule);padding:34px 20px;text-align:center;color:var(--muted);border-radius:2px}
+.empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:6px;font-family:"Archivo",sans-serif}
+
+/* ---------- counterfoil check ---------- */
+.check{margin-top:34px;border:1.5px solid var(--ink);border-radius:2px;background:var(--slip);padding:18px}
+.check h2{font-family:"Archivo",sans-serif;font-size:17px;margin:0 0 4px}
+.check p{margin:0 0 12px;font-size:14px;color:var(--muted);max-width:56ch}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row input{flex:1 1 220px}
+
+/* ---------- forms / dialog ---------- */
+dialog{
+  border:none;padding:0;background:transparent;max-width:560px;width:calc(100% - 24px);
+}
+dialog::backdrop{background:rgba(26,29,25,.55)}
+.sheet{background:var(--slip);border:1.5px solid var(--ink);border-radius:3px;padding:20px;box-shadow:0 24px 60px -20px rgba(0,0,0,.6)}
+.sheet h2{font-family:"Archivo",sans-serif;font-size:21px;margin:0 0 3px}
+.sheet .sub{font-size:13.5px;color:var(--muted);margin:0 0 16px}
+label{display:block;font:600 12px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 5px}
+input[type=text],textarea,select{
+  width:100%;font:400 15px "Noto Sans",sans-serif;padding:10px 11px;
+  border:1px solid var(--rule);border-radius:2px;background:#fff;color:var(--ink)
+}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--seek);outline-offset:1px;border-color:var(--seek)}
+textarea{min-height:88px;resize:vertical}
+.hint{font-size:12.5px;color:var(--muted);margin-top:5px}
+.tagpick{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.tagpick label{margin:0;text-transform:none;letter-spacing:0;font-family:"Noto Sans",sans-serif;font-weight:500;font-size:13.5px;color:var(--ink)}
+.tagpick label{border:1px solid var(--rule);padding:7px 10px;border-radius:99px;cursor:pointer;background:#fff}
+.tagpick input{position:absolute;opacity:0;pointer-events:none}
+.tagpick input:checked + span{font-weight:700}
+.tagpick label:has(input:checked){border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.tagpick label:has(input:focus-visible){outline:3px solid var(--seek);outline-offset:2px}
+.warn{background:#FBF3E4;border-left:4px solid #C08A1E;padding:11px 13px;font-size:13px;margin:16px 0 0;border-radius:0 2px 2px 0}
+.acts2{display:flex;gap:9px;margin-top:20px;flex-wrap:wrap}
+.btn{font:700 15px "Noto Sans",sans-serif;padding:12px 18px;border-radius:2px;cursor:pointer;border:1.5px solid var(--ink)}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.danger{background:transparent;color:var(--urgent);border-color:var(--urgent)}
+.btn:focus-visible{outline:3px solid var(--seek);outline-offset:2px}
+.btn[disabled]{opacity:.5;cursor:progress}
+
+/* counterfoil reveal */
+.foil{border:2px solid var(--ink);border-radius:2px;background:#fff;padding:16px;text-align:center;margin:14px 0}
+.foil .lbl{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.foil .val{font:600 clamp(17px,5.4vw,25px)/1.35 "IBM Plex Mono",monospace;letter-spacing:.06em;margin-top:7px;word-break:break-all}
+.threads{margin-top:6px}
+.thread{border:1px solid var(--rule);background:#fff;border-radius:2px;padding:12px;margin-top:9px;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.thread .h{font:600 11px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);font-size:12.5px;color:var(--muted)}
+footer p{margin:0 0 7px;max-width:70ch}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="strip"><div class="in">
+  <b>No names required. No login. No phone number needed.</b> &nbsp;Every notice deletes itself after 72 hours.
+</div></div>
+
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Anonymous reunification board · अनाम पुनर्मिलन बोर्ड</div>
+  <h1 class="hi">खोया–पाया<span>LOST &amp; FOUND</span></h1>
+  <p class="lede">If you have been separated from someone in a crowd, post a notice here. Anyone can read the board and reply. Replies are locked to the person who posted — nobody else, including whoever runs this board, can read them.</p>
+
+  <div class="acts">
+    <button class="act" data-k="seek" data-new><span class="t">I'm looking for someone</span><span class="s hi">किसी को ढूंढ रहा/रही हूँ</span></button>
+    <button class="act" data-k="found" data-new><span class="t">I found someone</span><span class="s hi">कोई मिला है</span></button>
+    <button class="act" data-k="safe" data-new><span class="t">I'm safe — find me</span><span class="s hi">मैं सुरक्षित हूँ</span></button>
+  </div>
+</header>
+
+<div class="bar">
+  <button class="chip" data-f="all" aria-pressed="true">All</button>
+  <button class="chip" data-f="seek" aria-pressed="false">Looking for</button>
+  <button class="chip" data-f="found" aria-pressed="false">Found</button>
+  <button class="chip" data-f="safe" aria-pressed="false">Safe</button>
+  <select class="zone" id="zoneFilter" aria-label="Filter by area"><option value="">All areas</option></select>
+  <div class="count" id="count">Loading board…</div>
+</div>
+
+<div class="board" id="board"></div>
+
+<section class="check">
+  <h2>Check replies to your notice</h2>
+  <p>Enter the counterfoil code you were given when you posted. It is the only key that unlocks your replies — keep it, we cannot recover it.</p>
+  <div class="row">
+    <input type="text" id="foilIn" class="mono" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" aria-label="Counterfoil code">
+    <button class="btn primary" id="foilGo">Open my notice</button>
+  </div>
+  <div id="foilOut"></div>
+</section>
+
+<footer>
+  <p><b>What this board stores.</b> The description you type is public — anyone can read it. Replies are encrypted in your browser to a key only your counterfoil can open. No account, no IP address, no phone number, no device ID is recorded with a notice.</p>
+  <p><b>What to write.</b> Enough to recognise a person — approximate age, clothing, where and when they were last seen. Nothing more. Do not post ID card numbers, addresses, vehicle numbers, or a photograph. A notice that identifies someone too precisely can be used against them later.</p>
+  <p><b>Auto-delete.</b> Notices and replies are erased 72 hours after posting. You can delete yours sooner with your counterfoil.</p>
+  <p><b>This is not an emergency service.</b> For a medical emergency call 102, police 112, fire 101. If a child is missing, contact the nearest police officer or control room immediately — do not wait on this board.</p>
+</footer>
+</div>
+
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+
+<script>
+/* ============================================================
+   Khoya–Paya · anonymous reunification board
+   Storage adapter — swap ONE object to move to Vercel KV/Upstash.
+   ============================================================ */
+const mem = new Map();
+const Store = {
+  async get(k, fb){
+    try{
+      if(window.storage){ const r = await window.storage.get(k, true); return r ? JSON.parse(r.value) : fb; }
+      return mem.has(k) ? JSON.parse(mem.get(k)) : fb;
+    }catch(e){ return fb; }
+  },
+  async set(k, v){
+    const s = JSON.stringify(v);
+    try{ if(window.storage) return await window.storage.set(k, s, true); mem.set(k,s); }
+    catch(e){ mem.set(k,s); }
+  }
+};
+const K_BOARD = 'kp:board:v1';
+const K_REPLIES = id => 'kp:replies:v1:' + id;
+const TTL = 72*60*60*1000;
+
+/* ---------- areas ---------- */
+const ZONES = ["Jantar Mantar","Parliament Street","Patel Chowk Metro","Janpath","Connaught Place / Rajiv Chowk",
+"Central Park","Bangla Sahib","Ramlila Maidan","Mandi House","ITO","RML Hospital","LNJP Hospital","Somewhere else"];
+const TAGS = [
+  {id:"child",   t:"Child under 12", hot:true},
+  {id:"elderly", t:"Elderly", hot:true},
+  {id:"medical", t:"Needs medicine", hot:true},
+  {id:"injured", t:"Injured", hot:true},
+  {id:"nophone", t:"Has no phone"},
+  {id:"group",   t:"Separated from group"}
+];
+const KINDS = {
+  seek:{label:"Looking for", head:"Post a 'looking for' notice", sub:"Describe the person you were separated from."},
+  found:{label:"Found",      head:"Post a 'found' notice",       sub:"Describe someone who is with you and needs to reach their people."},
+  safe:{label:"Safe",        head:"Post a 'I'm safe' notice",    sub:"Let people searching for you know you are alright and where you are."}
+};
+
+/* ---------- small utils ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const A32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford-ish, no I/L/O/U
+function code(n){ const b = crypto.getRandomValues(new Uint8Array(n)); return [...b].map(x=>A32[x%32]).join(''); }
+function counterfoil(){ return code(16).match(/.{4}/g).join('-'); }
+function ago(ts){
+  const m = Math.round((Date.now()-ts)/60000);
+  if(m < 1) return "just now";
+  if(m < 60) return m + " min ago";
+  const h = Math.floor(m/60); return h + "h " + (m%60) + "m ago";
+}
+const b64e = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0)).buffer;
+
+/* ============================================================
+   Crypto — ECIES over P-256.
+   · Each notice gets a keypair. Public key is published.
+   · Private key is stored wrapped under the counterfoil (PBKDF2 → AES-GCM),
+     so the server holds only ciphertext and cannot read replies.
+   · Repliers seal with an ephemeral key + ECDH. Only the counterfoil opens it.
+   ============================================================ */
+async function wrapKey(counterfoilStr, privKey){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(counterfoilStr), 'PBKDF2', false, ['deriveKey']);
+  const aes  = await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'}, base, {name:'AES-GCM',length:256}, false, ['encrypt']);
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const pk   = await crypto.subtle.exportKey('pkcs8', privKey);
+  const ct   = await crypto.subtle.encrypt({name:'AES-GCM',iv}, aes, pk);
+  return { s:b64e(salt), i:b64e(iv), k:b64e(ct) };
+}
+async function unwrapKey(counterfoilStr, w){
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(counterfoilStr), 'PBKDF2', false, ['deriveKey']);
+  const aes  = await crypto.subtle.deriveKey({name:'PBKDF2',salt:new Uint8Array(b64d(w.s)),iterations:150000,hash:'SHA-256'}, base, {name:'AES-GCM',length:256}, false, ['decrypt']);
+  const pk   = await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(b64d(w.i))}, aes, b64d(w.k));
+  return crypto.subtle.importKey('pkcs8', pk, {name:'ECDH',namedCurve:'P-256'}, false, ['deriveKey']);
+}
+async function sealTo(pubB64, text){
+  const pub = await crypto.subtle.importKey('spki', b64d(pubB64), {name:'ECDH',namedCurve:'P-256'}, false, []);
+  const eph = await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'}, true, ['deriveKey']);
+  const sk  = await crypto.subtle.deriveKey({name:'ECDH',public:pub}, eph.privateKey, {name:'AES-GCM',length:256}, false, ['encrypt']);
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const ct  = await crypto.subtle.encrypt({name:'AES-GCM',iv}, sk, new TextEncoder().encode(text));
+  return { e:b64e(await crypto.subtle.exportKey('spki', eph.publicKey)), i:b64e(iv), c:b64e(ct), at:Date.now() };
+}
+async function openWith(privKey, blob){
+  const eph = await crypto.subtle.importKey('spki', b64d(blob.e), {name:'ECDH',namedCurve:'P-256'}, false, []);
+  const sk  = await crypto.subtle.deriveKey({name:'ECDH',public:eph}, privKey, {name:'AES-GCM',length:256}, false, ['decrypt']);
+  const pt  = await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(b64d(blob.i))}, sk, b64d(blob.c));
+  return new TextDecoder().decode(pt);
+}
+
+/* ============================================================
+   Board
+   ============================================================ */
+let BOARD = [];
+let filter = 'all', zoneF = '';
+
+async function loadBoard(){
+  const raw = await Store.get(K_BOARD, []);
+  const cut = Date.now() - TTL;
+  BOARD = raw.filter(n => n.at > cut);
+  if(BOARD.length !== raw.length) await Store.set(K_BOARD, BOARD);
+  render();
+}
+
+function render(){
+  const list = BOARD
+    .filter(n => filter === 'all' || n.k === filter)
+    .filter(n => !zoneF || n.z === zoneF)
+    .sort((a,b) => (b.hot - a.hot) || (b.at - a.at));
+
+  $('#count').textContent = list.length + (list.length === 1 ? " notice on the board" : " notices on the board") +
+    " · auto-deletes after 72h";
+
+  if(!list.length){
+    $('#board').innerHTML = '<div class="empty" style="grid-column:1/-1"><b>Nothing posted here yet</b>' +
+      'When someone posts a notice it appears here for everyone to read.</div>';
+    return;
+  }
+  $('#board').innerHTML = list.map(n => {
+    const tags = (n.t||[]).map(id => {
+      const t = TAGS.find(x=>x.id===id); if(!t) return '';
+      return '<span class="tag'+(t.hot?' hot':'')+'">'+esc(t.t)+'</span>';
+    }).join('');
+    return '<article class="slip" data-k="'+n.k+'">'+
+      '<div class="ref mono">'+esc(n.r)+'</div>'+
+      '<div class="kind">'+esc(KINDS[n.k].label)+'</div>'+
+      '<h3>'+esc(n.n || 'Name not given')+'</h3>'+
+      '<p class="desc">'+esc(n.d)+'</p>'+
+      '<div class="meta"><span class="tag">'+esc(n.z)+'</span>'+
+        (n.w ? '<span class="tag">Last seen '+esc(n.w)+'</span>' : '')+tags+'</div>'+
+      '<div class="slipfoot"><span class="when">Posted '+ago(n.at)+'</span>'+
+        '<button class="reply" data-reply="'+esc(n.id)+'">Reply privately</button></div>'+
+    '</article>';
+  }).join('');
+}
+
+/* ---------- dialog helpers ---------- */
+const dlg = $('#dlg'), sheet = $('#sheet');
+function open(html){ sheet.innerHTML = html; dlg.showModal(); }
+function close(){ dlg.close(); sheet.innerHTML = ''; }
+dlg.addEventListener('click', e => { if(e.target === dlg) close(); });
+
+/* ---------- post a notice ---------- */
+function postForm(k){
+  const meta = KINDS[k];
+  open(
+    '<h2>'+meta.head+'</h2><p class="sub">'+meta.sub+'</p>'+
+    '<label for="f_n">First name or nickname <span style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></label>'+
+    '<input type="text" id="f_n" maxlength="40" autocomplete="off" placeholder="Leave blank if you prefer">'+
+    '<div class="hint">A first name helps, a full name is rarely needed.</div>'+
+    '<label for="f_d">How would someone recognise them?</label>'+
+    '<textarea id="f_d" maxlength="400" placeholder="Approximate age, height, what they are wearing, anything distinctive. Example: about 60, grey kurta, walks with a stick, hard of hearing."></textarea>'+
+    '<label for="f_z">Area</label>'+
+    '<select id="f_z">'+ZONES.map(z=>'<option>'+esc(z)+'</option>').join('')+'</select>'+
+    '<label for="f_w">Last seen when <span style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></label>'+
+    '<input type="text" id="f_w" maxlength="40" placeholder="e.g. around 4pm, near the barricade">'+
+    '<label>Anything urgent?</label>'+
+    '<div class="tagpick">'+TAGS.map(t=>'<label><input type="checkbox" value="'+t.id+'"><span>'+esc(t.t)+'</span></label>').join('')+'</div>'+
+    '<div class="warn"><b>Before you post:</b> this description is public. Write enough to recognise the person and no more. No ID numbers, no home address, no photograph.</div>'+
+    '<div class="acts2"><button class="btn primary" id="f_go">Post notice</button><button class="btn ghost" id="f_x">Cancel</button></div>'
+  );
+  $('#f_x').onclick = close;
+  $('#f_go').onclick = async e => {
+    const d = $('#f_d').value.trim();
+    if(d.length < 8){ $('#f_d').focus(); $('#f_d').style.borderColor = 'var(--urgent)'; return; }
+    e.target.disabled = true; e.target.textContent = 'Posting…';
+
+    const kp = await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'}, true, ['deriveKey']);
+    const foil = counterfoil();
+    const tags = [...sheet.querySelectorAll('.tagpick input:checked')].map(i=>i.value);
+    const note = {
+      id: code(10), r: 'KP-'+code(4), k, at: Date.now(),
+      n: $('#f_n').value.trim().slice(0,40),
+      d, z: $('#f_z').value, w: $('#f_w').value.trim().slice(0,40),
+      t: tags, hot: tags.some(id => TAGS.find(x=>x.id===id)?.hot) ? 1 : 0,
+      pub: b64e(await crypto.subtle.exportKey('spki', kp.publicKey)),
+      wrap: await wrapKey(foil, kp.privateKey)
+    };
+    const cur = await Store.get(K_BOARD, []);
+    cur.push(note);
+    await Store.set(K_BOARD, cur.filter(n => n.at > Date.now()-TTL));
+    await loadBoard();
+
+    open(
+      '<h2>Notice posted</h2><p class="sub">It is on the board as <b class="mono">'+esc(note.r)+'</b>.</p>'+
+      '<div class="foil"><div class="lbl">Your counterfoil — write this down</div><div class="val">'+esc(foil)+'</div></div>'+
+      '<div class="warn">This code is the <b>only</b> way to read replies or delete your notice. It is not stored anywhere we can read. If you lose it, the notice stays up until it expires and you will not see the replies.</div>'+
+      '<div class="acts2"><button class="btn primary" id="c_copy">Copy code</button><button class="btn ghost" id="c_x">Done</button></div>'
+    );
+    $('#c_x').onclick = close;
+    $('#c_copy').onclick = async ev => {
+      try{ await navigator.clipboard.writeText(foil); ev.target.textContent = 'Copied'; }
+      catch(_){ ev.target.textContent = 'Select it and copy'; }
+    };
+  };
+}
+
+/* ---------- reply ---------- */
+function replyForm(id){
+  const n = BOARD.find(x => x.id === id); if(!n) return;
+  open(
+    '<h2>Reply to '+esc(n.r)+'</h2>'+
+    '<p class="sub">Only the person who posted this notice can open your reply. It is encrypted in your browser before it is sent.</p>'+
+    '<label for="r_m">Your message</label>'+
+    '<textarea id="r_m" maxlength="600" placeholder="What you saw, where, when. If you want them to call you, put a number here — it stays encrypted."></textarea>'+
+    '<div class="hint">You will not get a notification. If you want a reply back, say how to reach you inside the message.</div>'+
+    '<div class="acts2"><button class="btn primary" id="r_go">Send reply</button><button class="btn ghost" id="r_x">Cancel</button></div>'
+  );
+  $('#r_x').onclick = close;
+  $('#r_go').onclick = async e => {
+    const m = $('#r_m').value.trim();
+    if(m.length < 3){ $('#r_m').focus(); return; }
+    e.target.disabled = true; e.target.textContent = 'Sending…';
+    const blob = await sealTo(n.pub, m);
+    const cur = await Store.get(K_REPLIES(n.id), []);
+    cur.push(blob);
+    await Store.set(K_REPLIES(n.id), cur);
+    open('<h2>Reply sent</h2><p class="sub">It is now waiting on notice '+esc(n.r)+'. Only their counterfoil can open it.</p>'+
+      '<div class="acts2"><button class="btn primary" id="q_x">Close</button></div>');
+    $('#q_x').onclick = close;
+  };
+}
+
+/* ---------- open my notice ---------- */
+async function openMine(){
+  const foil = $('#foilIn').value.trim().toUpperCase().replace(/\s/g,'');
+  const out = $('#foilOut');
+  if(!foil){ return; }
+  out.innerHTML = '<p class="hint">Checking…</p>';
+
+  for(const n of BOARD){
+    let priv;
+    try{ priv = await unwrapKey(foil, n.wrap); }catch(_){ continue; }
+
+    const raw = await Store.get(K_REPLIES(n.id), []);
+    const msgs = [];
+    for(const b of raw){
+      try{ msgs.push({ at:b.at, text: await openWith(priv, b) }); }catch(_){}
+    }
+    out.innerHTML =
+      '<div class="foil" style="text-align:left"><div class="lbl">Your notice · '+esc(n.r)+'</div>'+
+      '<p style="margin:8px 0 0;font-size:14.5px">'+esc(n.d)+'</p></div>'+
+      '<h2 style="font-family:Archivo,sans-serif;font-size:16px;margin:18px 0 0">'+
+        (msgs.length ? msgs.length + (msgs.length===1?' reply':' replies') : 'No replies yet') + '</h2>'+
+      '<div class="threads">'+ msgs.sort((a,b)=>a.at-b.at).map(m =>
+        '<div class="thread"><div class="h">Received '+ago(m.at)+'</div>'+esc(m.text)+'</div>').join('') +'</div>'+
+      '<div class="acts2"><button class="btn danger" id="del">Delete my notice and all replies</button></div>';
+
+    $('#del').onclick = async ev => {
+      ev.target.disabled = true; ev.target.textContent = 'Deleting…';
+      const cur = (await Store.get(K_BOARD, [])).filter(x => x.id !== n.id);
+      await Store.set(K_BOARD, cur);
+      await Store.set(K_REPLIES(n.id), []);
+      $('#foilIn').value = '';
+      out.innerHTML = '<p class="hint"><b>Deleted.</b> The notice and every reply to it are gone.</p>';
+      await loadBoard();
+    };
+    return;
+  }
+  out.innerHTML = '<p class="hint" style="color:var(--urgent)"><b>No notice matches that code.</b> Check for typos, or the notice may have already expired after 72 hours.</p>';
+}
+
+/* ---------- wiring ---------- */
+document.addEventListener('click', e => {
+  const nw = e.target.closest('[data-new]'); if(nw) return postForm(nw.dataset.k);
+  const rp = e.target.closest('[data-reply]'); if(rp) return replyForm(rp.dataset.reply);
+  const ch = e.target.closest('.chip');
+  if(ch){
+    filter = ch.dataset.f;
+    document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === ch)));
+    render();
+  }
+});
+$('#zoneFilter').innerHTML = '<option value="">All areas</option>' + ZONES.map(z=>'<option>'+esc(z)+'</option>').join('');
+$('#zoneFilter').onchange = e => { zoneF = e.target.value; render(); };
+$('#foilGo').onclick = openMine;
+$('#foilIn').addEventListener('keydown', e => { if(e.key === 'Enter') openMine(); });
+
+loadBoard();
+setInterval(loadBoard, 20000);
+</script>
