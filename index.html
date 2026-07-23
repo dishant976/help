@@ -213,7 +213,7 @@ footer p{margin:0 0 7px;max-width:70ch}
 </section>
 
 <footer>
-  <p><b>What this board stores.</b> The description you type is public — anyone can read it. Replies are encrypted in your browser to a key only your counterfoil can open. No account, no IP address, no phone number, no device ID is recorded with a notice.</p>
+  <p><b>What this board stores.</b> The description you type is public — anyone can read it. Replies are encrypted in your browser to a key only your counterfoil can open. No account, no phone number and no device ID is recorded with a notice. To stop flooding we keep a 60-second counter under a one-way, daily-rotating hash of your IP address \u2014 never the address itself.</p>
   <p><b>What to write.</b> Enough to recognise a person — approximate age, clothing, where and when they were last seen. Nothing more. Do not post ID card numbers, addresses, vehicle numbers, or a photograph. A notice that identifies someone too precisely can be used against them later.</p>
   <p><b>Auto-delete.</b> Notices and replies are erased 72 hours after posting. You can delete yours sooner with your counterfoil.</p>
   <p><b>This is not an emergency service.</b> For a medical emergency call 102, police 112, fire 101. If a child is missing, contact the nearest police officer or control room immediately — do not wait on this board.</p>
@@ -227,22 +227,20 @@ footer p{margin:0 0 7px;max-width:70ch}
    Khoya–Paya · anonymous reunification board
    Storage adapter — swap ONE object to move to Vercel KV/Upstash.
    ============================================================ */
-const mem = new Map();
-const Store = {
-  async get(k, fb){
-    try{
-      if(window.storage){ const r = await window.storage.get(k, true); return r ? JSON.parse(r.value) : fb; }
-      return mem.has(k) ? JSON.parse(mem.get(k)) : fb;
-    }catch(e){ return fb; }
-  },
-  async set(k, v){
-    const s = JSON.stringify(v);
-    try{ if(window.storage) return await window.storage.set(k, s, true); mem.set(k,s); }
-    catch(e){ mem.set(k,s); }
-  }
-};
-const K_BOARD = 'kp:board:v1';
-const K_REPLIES = id => 'kp:replies:v1:' + id;
+async function api(path, opts){
+  const r = await fetch('/api/' + path, {
+    headers:{'Content-Type':'application/json'},
+    ...opts,
+    body: opts && opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error || 'Request failed.');
+  return j;
+}
+async function sha(str){
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return b64e(d);
+}
 const TTL = 72*60*60*1000;
 
 /* ---------- areas ---------- */
@@ -321,10 +319,8 @@ let BOARD = [];
 let filter = 'all', zoneF = '';
 
 async function loadBoard(){
-  const raw = await Store.get(K_BOARD, []);
-  const cut = Date.now() - TTL;
-  BOARD = raw.filter(n => n.at > cut);
-  if(BOARD.length !== raw.length) await Store.set(K_BOARD, BOARD);
+  try{ BOARD = (await api('board')).notices || []; }
+  catch(e){ document.getElementById('count').textContent = 'Board unreachable \u2014 retrying.'; return; }
   render();
 }
 
@@ -402,9 +398,9 @@ function postForm(k){
       pub: b64e(await crypto.subtle.exportKey('spki', kp.publicKey)),
       wrap: await wrapKey(foil, kp.privateKey)
     };
-    const cur = await Store.get(K_BOARD, []);
-    cur.push(note);
-    await Store.set(K_BOARD, cur.filter(n => n.at > Date.now()-TTL));
+    note.dh = await sha(foil + '|delete');
+    try{ await api('board', {method:'POST', body: note}); }
+    catch(err){ e.target.disabled=false; e.target.textContent='Post notice'; alert(err.message); return; }
     await loadBoard();
 
     open(
@@ -437,10 +433,11 @@ function replyForm(id){
     const m = $('#r_m').value.trim();
     if(m.length < 3){ $('#r_m').focus(); return; }
     e.target.disabled = true; e.target.textContent = 'Sending…';
-    const blob = await sealTo(n.pub, m);
-    const cur = await Store.get(K_REPLIES(n.id), []);
-    cur.push(blob);
-    await Store.set(K_REPLIES(n.id), cur);
+    let blob;
+    try{
+      blob = await sealTo(n.pub, m);
+      await api('replies', {method:'POST', body:{ id:n.id, ...blob }});
+    }catch(err){ e.target.disabled=false; e.target.textContent='Send reply'; alert(err.message); return; }
     open('<h2>Reply sent</h2><p class="sub">It is now waiting on notice '+esc(n.r)+'. Only their counterfoil can open it.</p>'+
       '<div class="acts2"><button class="btn primary" id="q_x">Close</button></div>');
     $('#q_x').onclick = close;
@@ -458,7 +455,8 @@ async function openMine(){
     let priv;
     try{ priv = await unwrapKey(foil, n.wrap); }catch(_){ continue; }
 
-    const raw = await Store.get(K_REPLIES(n.id), []);
+    let raw = [];
+    try{ raw = (await api('replies?id=' + encodeURIComponent(n.id))).replies || []; }catch(_){}
     const msgs = [];
     for(const b of raw){
       try{ msgs.push({ at:b.at, text: await openWith(priv, b) }); }catch(_){}
@@ -474,9 +472,8 @@ async function openMine(){
 
     $('#del').onclick = async ev => {
       ev.target.disabled = true; ev.target.textContent = 'Deleting…';
-      const cur = (await Store.get(K_BOARD, [])).filter(x => x.id !== n.id);
-      await Store.set(K_BOARD, cur);
-      await Store.set(K_REPLIES(n.id), []);
+      try{ await api('board', {method:'DELETE', body:{ id:n.id, proof: await sha(foil + '|delete') }}); }
+      catch(err){ ev.target.disabled=false; ev.target.textContent='Delete my notice and all replies'; alert(err.message); return; }
       $('#foilIn').value = '';
       out.innerHTML = '<p class="hint"><b>Deleted.</b> The notice and every reply to it are gone.</p>';
       await loadBoard();
