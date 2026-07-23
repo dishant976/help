@@ -1,10 +1,13 @@
 // Upstash Redis over REST + privacy-preserving rate limiting.
 import crypto from 'node:crypto';
 
-const URL = process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+// Vercel's Upstash integration injects KV_REST_API_*; a database created
+// directly at upstash.com gives UPSTASH_REDIS_REST_*. Accept either.
+const URL   = process.env.KV_REST_API_URL   || process.env.UPSTASH_REDIS_REST_URL;
+const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
 export async function redis(...cmd) {
+  if (!URL || !TOKEN) throw new Error('Redis is not configured: no KV_REST_API_URL / KV_REST_API_TOKEN.');
   const r = await fetch(URL, {
     method: 'POST',
     headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
